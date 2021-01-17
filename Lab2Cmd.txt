@@ -1,0 +1,130 @@
+1. select student.*,sc.* from student,sc where student.Sno=sc.Sno;
+select student.Sno,Sname,Ssex,Sage,Sdept,Scholarship,Cno,Grade from student,sc where student.Sno=sc.Sno;
+2. select c1.Cno,c2.cpno from course c1,course c2 where c1.Cpno=c2.Cno;
+3. select student.*,Cno,Grade from student left outer join sc on(student.Sno=sc.Sno); 等价于 select student.*,Cno,Grade from sc right outer join student on(student.Sno=sc.Sno);
+4. select sc.Sno,Sname from sc,student where Cno='2' and Grade>=90 and sc.Sno=student.Sno;
+select student.Sno,Sname,Cname,Grade from student,sc,course where student.Sno=sc.Sno and sc.Cno=course.Cno;
+5. select Sno,Sname,Sdept from student where Sdept = (select Sdept from student where Sname='刘晨'); 等价 select s2.Sno,s2.Sname,s2.Sdept from student s1, student s2 where s1.Sname='刘晨' and s1.Sdept=s2.Sdept; 等价 select Sno,Sname,Sdept from student s1 where exists (select * from student s2 where s2.Sname='刘晨' and s1.Sdept=s2.Sdept);
+select Sno,Sname from student where Sno in (select Sno from sc where Cno in (select Cno from course where Cname='信息系统')); 
+6. select Sno,Cno from sc x where Grade>(select AVG(Grade) from sc y where x.Sno=y.Sno);
+7. select Sname,Sage from student where Sdept!='CS' and Sage<any(select Sage from student where Sdept='CS' ); 等价 select Sname,Sage from student where Sdept!='CS' and Sage<(select MAX(Sage) from student where Sdept='CS');
+select Sname,Sage from student where Sdept!='CS' and Sage<all(select Sage from student where Sdept='CS' ); 等价 select Sname,Sage from student where Sdept!='CS' and Sage<(select MIN(Sage) from student where Sdept='CS');
+8. select Sname from student where exists (select * from sc where Cno='1' and Sno=student.Sno);
+select Sname from student where not exists (select * from sc where Cno='1' and Sno=student.Sno);
+选修了全部课程, 不存在一门课程在course里但是没有选
+select Sname from student where not exists (select * from course where not exists (select * from sc where Sno = student.Sno and Cno=course.Cno));
+不存在一门课程122学生选了而这个学生没选
+select distinct Sno from sc sc1 where not exists (select * from sc sc2 where sc2.Sno='200215122' and not exists (select * from sc sc3 where sc2.Cno=sc3.Cno and sc1.Sno=sc3.Sno));
+9. select * from student where Sdept='CS' union select * from student where Sage<=19; 等价 select * from student where Sdept='CS' or Sage<=19;
+select Sno from sc where Cno='1' intersect select Sno from sc where Cno='2'; 等价 select Sno from sc where Cno='1' and Sno in (select Sno from sc where Cno='2');
+select * from student where Sdept='CS' except select * from student where Sage<=19; 等价 select * from student where Sdept='CS' and Sage>19;
+10. update student set Sage=Sage+1 where Sdept='IS';
+11. delete from student where Sno='95019';
+12. insert into sc(Sno,Cno) values('95020','1');
+
+
+1. select course.Cno,Cname,Sno,Grade from course left outer join sc on ( course.Cno=sc.Cno); 
++-----+------------+-----------+-------+
+| Cno | Cname      | Sno       | Grade |
++-----+------------+-----------+-------+
+| 1   | 数据库     | 200215121 |    92 |
+| 2   | 数学       | 200215121 |    85 |
+| 2   | 数学       | 200215122 |    90 |
+| 3   | 信息系统   | 200215121 |    88 |
+| 3   | 信息系统   | 200215122 |    80 |
+| 4   | 操作系统   | NULL      | NULL  |
+| 5   | 数据结构   | NULL      | NULL  |
+| 6   | 数据处理   | NULL      | NULL  |
+| 7   | PASCAL语言 | NULL      | NULL  |
++-----+------------+-----------+-------+
+2. 
+select Sno,Sname,Sage from student where Sage= ( select Sage from student where Sname='张立');
+select s1.Sno,s1.Sname,s1.Sage from student s1, student s2 where s1.Sage=s2.Sage and s2.Sname='张立';
+select Sno,Sname,Sage from student s1 where exists (select * from student s2 where s1.Sage=s2.Sage and s2.Sname='张立');
++-----------+-------+------+
+| Sno       | Sname | Sage |
++-----------+-------+------+
+| 200215122 | 刘晨  |   19 |
+| 200215125 | 张立  |   19 |
++-----------+-------+------+
+3. select sc.Sno,Sname from sc,student where Cno='3' and Grade between 80 and 90 and sc.Sno=student.Sno;
++-----------+-------+
+| Sno       | Sname |
++-----------+-------+
+| 200215121 | 李勇  |
+| 200215122 | 刘晨  |
++-----------+-------+
+4. select sc.Cno,Cname from sc,course where Sno='200215122' and sc.Cno=course.Cno; 
++-----+----------+
+| Cno | Cname    |
++-----+----------+
+| 2   | 数学     |
+| 3   | 信息系统 |
++-----+----------+
+select sc.Cno,Cname,Grade from sc,course where Sno='200215122' and sc.Cno=course.Cno; 
++-----+----------+-------+
+| Cno | Cname    | Grade |
++-----+----------+-------+
+| 2   | 数学     |    90 |
+| 3   | 信息系统 |    80 |
++-----+----------+-------+
+5. select Sno,Cno from sc sc1 where Grade+5<(select AVG(Grade) from sc sc2 where sc1.Sno=sc2.Sno group by Sno);
+Empty set
+6. select Sno,Sname,Sage from student where Ssex='女' and Sage<all (select Sage from student where Ssex='男');
++-----------+-------+------+
+| Sno       | Sname | Sage |
++-----------+-------+------+
+| 200215123 | 王敏  |   18 |
++-----------+-------+------+
+7. select Sname,Sdept from student,sc where student.Sno=sc.Sno and sc.Cno='2';
++-------+-------+
+| Sname | Sdept |
++-------+-------+
+| 李勇  | CS    |
+| 刘晨  | CS    |
++-------+-------+
+8. update student set Sage=Sage+2 where Sno in (select distinct Sno from sc where Grade between 80 and 90);
+select student.Sno,Sage,Grade from student,sc where Grade between 80 and 90 and student.Sno=sc.Sno;
++-----------+------+-------+
+| Sno       | Sage | Grade |
++-----------+------+-------+
+| 200215121 |   22 |    85 |
+| 200215121 |   22 |    88 |
+| 200215122 |   21 |    90 |
+| 200215122 |   21 |    80 |
++-----------+------+-------+
+9. insert into course(Cno,Cname)  values('8','C语言'), ('9','人工智能');
+select Cname from course;
++------------+
+| Cname      |
++------------+
+| 数据库     |
+| 数学       |
+| 信息系统   |
+| 操作系统   |
+| 数据结构   |
+| 数据处理   |
+| PASCAL语言 |
+| C语言      |
+| 人工智能   |
++------------+
+10. delete from course where Cname='人工智能';
+select Cname from course;
++------------+
+| Cname      |
++------------+
+| 数据库     |
+| 数学       |
+| 信息系统   |
+| 操作系统   |
+| 数据结构   |
+| 数据处理   |
+| PASCAL语言 |
+| C语言      |
++------------+
+
+
+
+
+
+

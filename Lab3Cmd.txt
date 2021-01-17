@@ -1,0 +1,108 @@
+1. create view CS_View as select * from student where Sdept='CS';
+
+2. select CS_View.Sno,Sname,Ssex,Sage,Sdept,Scholarship,Cno,Grade from CS_View,sc where CS_View.Sno=sc.Sno and Cno='1';
++-----------+-------+------+------+-------+-------------+-----+-------+
+| Sno       | Sname | Ssex | Sage | Sdept | Scholarship | Cno | Grade |
++-----------+-------+------+------+-------+-------------+-----+-------+
+| 200215121 | 李勇  | 男   |   20 | CS    | 否          | 1   |    92 |
++-----------+-------+------+------+-------+-------------+-----+-------+
+
+3.  create view IS_View as select student.Sno,Sname,Ssex,Sage,Sdept,Scholarship,Cno,Grade from student,sc where Sdept='IS' and student.Sno=sc.Sno and sc.Grade>80;
+
+4. select distinct Sname from IS_View;
+Empty set
+select * from IS_View;
+Empty set
+
+5. drop view IS_View;
+
+6. 
+grant select,update on table student to U1@localhost;
+grant insert on table sc to U2@localhost;
+(1) select * from student;
++-----------+-------+------+------+-------+-------------+
+| Sno       | Sname | Ssex | Sage | Sdept | Scholarship |
++-----------+-------+------+------+-------+-------------+
+| 200215121 | 李勇  | 男   |   20 | CS    | 否          |
+| 200215122 | 刘晨  | 女   |   19 | CS    | 否          |
+| 200215123 | 王敏  | 女   |   18 | MA    | 否          |
+| 200215125 | 张立  | 男   |   19 | IS    | 否          |
++-----------+-------+------+------+-------+-------------+
+(2) update student set Sage=Sage+1;
+select * from student;
++-----------+-------+------+------+-------+-------------+
+| Sno       | Sname | Ssex | Sage | Sdept | Scholarship |
++-----------+-------+------+------+-------+-------------+
+| 200215121 | 李勇  | 男   |   21 | CS    | 否          |
+| 200215122 | 刘晨  | 女   |   20 | CS    | 否          |
+| 200215123 | 王敏  | 女   |   19 | MA    | 否          |
+| 200215125 | 张立  | 男   |   20 | IS    | 否          |
++-----------+-------+------+------+-------+-------------+
+(3) delete from student where Sdept='IS';
+1142 - DELETE command denied to user 'U1'@'localhost' for table 'student'
+(4) select * from student,sc where Sdept='CS' and student.Sno=sc.Sno;
+1142 - SELECT command denied to user 'U1'@'localhost' for table 'sc'
+
+(1) insert into sc values('200215122','1',75);
+(2) select * from CS_View;
+1142 - SELECT command denied to user 'U2'@'localhost' for table 'cs_view'
+
+7. revoke select,update on student from U1@localhost;
+
+8.use s_t_u201813878;
+1044 - Access denied for user 'U1'@'localhost' to database 's_t_u201813878'
+
+10.
+create trigger sc_t
+after update on sc
+for each row
+begin
+	if(new.Grade>=95) then 
+		update student set Scholarship='是' where student.Sno=new.Sno and Scholarship='否';
+	else
+		update student set Scholarship='否' where student.Sno=new.Sno and old.Grade>=95 and not exists (select * from sc where Sno=new.Sno and Grade>=95);
+	end if;
+end;
+
+(1) update sc set Grade=98 where Sno='200215121' and Cno='3';
+(2) update sc set Grade=80 where Sno='200215121' and Cno='3';
+
+11. drop trigger sc_t;
+
+12. 
+create procedure getCSAvgMax ()
+begin
+	select sc.Sno,AVG(Grade),MAX(Grade) from sc,student
+	where student.Sno=sc.Sno and Sdept='CS' group by Sno;
+end;
+call getCSAvgMax();
+
+13.
+create procedure getStuGrade(stuNo char(9))
+begin
+	select sc.Sno,Sname,Cno,Grade from student,sc
+	where student.Sno=sc.Sno and sc.Sno=stuNo;
+end;
+call getStuGrade('200215121');
+	
+14.
+create function funcStuGrade(stuNo char(9)) returns char(100)
+reads sql data
+begin
+	return (select group_concat(Sname,' ',Cno,' ',Grade) from student,sc
+	where student.Sno=sc.Sno and sc.Sno=stuNo group by Sname);
+end;
+
+select funcStuGrade('200215121');
+
+drop function funcStuGrade;
+
+15.
+alter table sc add constraint graRange check(Grade between 0 and 100);
+
+update sc set Grade=120 where Sno='200215122' and Cno='3';
+select * from sc where Sno='200215122' and Cno='3';
+update sc set Grade=80 where Sno='200215122' and Cno='3';
+alter table sc add constraint graRange check(Grade between 0 and 100);
+update sc set Grade=120 where Sno='200215122' and Cno='3';
+select * from sc where Sno='200215122' and Cno='3';

@@ -1,0 +1,119 @@
+ALTER TABLE student ADD Scome DATETIME;
+ALTER TABLE student MODIFY COLUMN Sage SMALLINT;
+
+CREATE UNIQUE INDEX  Stusno ON Student(Sno);
+CREATE UNIQUE INDEX Coucno ON Course(Cno);
+CREATE UNIQUE INDEX SCno ON SC(Sno ASC，Cno DESC);
+
+create table Student (Sno CHAR(9) PRIMARY KEY, Sname CHAR(20) UNIQUE, Ssex CHAR(2), Sage SMALLINT, Sdept CHAR(20), Scholarship char(2) ); 
+create table Course (Cno CHAR(4) PRIMARY KEY, Cname CHAR(40), Cpno CHAR(4), Ccredit SMALLINT, FOREIGN KEY (Cpno) REFERENCES Course(Cno) ); 
+create table SC (Sno CHAR(9), Cno CHAR(4), Grade SMALLINT, primary key (Sno, Cno), FOREIGN KEY (Sno) REFERENCES Student(Sno), FOREIGN KEY (Cno) REFERENCES Course(Cno) );
+
+use s_t_u201813878;/*将 S_T 设为当前数据库*/ 
+insert into student values('200215121','李勇','男',20,'CS', '否'); 
+insert into student values('200215122','刘晨','女',19,'CS', '否'); 
+insert into student values('200215123','王敏','女',18,'MA', '否'); 
+insert into student values('200215125','张立','男',19,'IS', '否');
+insert into course values('1', '数据库', NULL,4); 
+insert into course values('2', '数学',  NULL,2); 
+insert into course values('3', '信息系统', NULL,4); 
+insert into course values('4', '操作系统', NULL,3); 
+insert into course values('5', '数据结构', NULL,4); 
+insert into course values('6', '数据处理', NULL, 2);
+insert into course values('7', 'PASCAL语言',  NULL,4); 
+update Course set Cpno = '5' where Cno = '1';
+update Course set Cpno = '5' where Cno = '3'; 
+update Course set Cpno = '6' where Cno = '4'; 
+update Course set Cpno = '7' where Cno = '5'; 
+update Course set Cpno = '6' where Cno = '7'; 
+insert into SC values('200215121', '1',92); 
+insert into SC values('200215121', '2',85); 
+insert into SC values('200215121', '3',88); 
+insert into SC values('200215122', '2',90); 
+insert into SC values('200215122', '3',80);
+
+SELECT * FROM student; SELECT  Sno,Sname,Ssex,Sage,Sdept FROM Student;
+SELECT student.Sno,Sname FROM sc,student WHERE Cno='2' AND Grade>90 and sc.Sno=student.Sno;
+SELECT Sname,Ssex FROM student WHERE Sdept IN ('IS', 'MA', 'CS');
+SELECT Sname,Sdept,Sage FROM student WHERE Sage BETWEEN 20 AND 23;
+SELECT Sname,Sno,Ssex FROM student WHERE Sname LIKE '刘%';
+SELECT Sno,Grade FROM sc WHERE Cno='3' ORDER BY Grade DESC;
+SELECT AVG(Grade) FROM sc WHERE Cno='1';
+SELECT Sno FROM sc GROUP BY Sno HAVING COUNT(*)>3;
+
+
+1. select Sno,Sname,Sage from student;
++-----------+-------+------+
+| Sno       | Sname | Sage |
++-----------+-------+------+
+| 200215121 | 李勇  |   20 |
+| 200215122 | 刘晨  |   19 |
+| 200215123 | 王敏  |   18 |
+| 200215125 | 张立  |   19 |
++-----------+-------+------+
+2. select * from student where Sdept='CS';
++-----------+-------+------+------+-------+-------------+
+| Sno       | Sname | Ssex | Sage | Sdept | Scholarship |
++-----------+-------+------+------+-------+-------------+
+| 200215121 | 李勇  | 男   |   20 | CS    | 否          |
+| 200215122 | 刘晨  | 女   |   19 | CS    | 否          |
++-----------+-------+------+------+-------+-------------+
+3. select Sno,Cno,Grade from sc where Grade>=90 or Grade<60;
++-----------+-----+-------+
+| Sno       | Cno | Grade |
++-----------+-----+-------+
+| 200215121 | 1   |    92 |
+| 200215122 | 2   |    90 |
++-----------+-----+-------+
+4. select Sname,Ssex,Sage from student where Sage not between 19 and 20;
++-------+------+------+
+| Sname | Ssex | Sage |
++-------+------+------+
+| 王敏  | 女   |   18 |
++-------+------+------+
+5. select Sname,Sdept from student where Sdept in ('MA', 'IS');
++-------+-------+
+| Sname | Sdept |
++-------+-------+
+| 王敏  | MA    |
+| 张立  | IS    |
++-------+-------+
+6. select Cno,Cname,Ccredit from course where Cname like '%数据%';
++-----+----------+---------+
+| Cno | Cname    | Ccredit |
++-----+----------+---------+
+| 1   | 数据库   |       4 |
+| 5   | 数据结构 |       4 |
+| 6   | 数据处理 |       2 |
++-----+----------+---------+
+7. select Sno,Cno from sc where Grade is null;
+Empty set
+
+8. select MAX(Grade),MIN(Grade),AVG(Grade) from sc where Sno='200215121';
++------------+------------+------------+
+| MAX(Grade) | MIN(Grade) | AVG(Grade) |
++------------+------------+------------+
+|         92 |         85 | 88.3333    |
++------------+------------+------------+
+9. select Sno,Grade from sc where Cno='2' order by Grade ASC;
++-----------+-------+
+| Sno       | Grade |
++-----------+-------+
+| 200215121 |    85 |
+| 200215122 |    90 |
++-----------+-------+
+10. select Sdept,AVG(Sage) from student group by Sdept;
++-------+-----------+
+| Sdept | AVG(Sage) |
++-------+-----------+
+| CS    | 19.5000   |
+| MA    | 18.0000   |
+| IS    | 19.0000   |
++-------+-----------+
+11. select Sdept,AVG(Sage) from student group by Sdept having AVG(Sage)<=19;
++-------+-----------+
+| Sdept | AVG(Sage) |
++-------+-----------+
+| MA    | 18.0000   |
+| IS    | 19.0000   |
++-------+-----------+
